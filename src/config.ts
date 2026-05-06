@@ -7,6 +7,7 @@ const envSchema = z.object({
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
   DATABASE_URL: z.string().min(1),
   DATABASE_SSL: z.coerce.boolean().default(true),
+  PORT: z.coerce.number().int().positive().optional(),
   CHAT_API_PORT: z.coerce.number().int().positive().default(8788),
   CHAT_CORS_ORIGIN: z.string().min(1).default("*"),
   CHAT_RATE_LIMIT_WINDOW_SECONDS: z.coerce.number().int().positive().default(60),
@@ -17,7 +18,6 @@ const envSchema = z.object({
   CHAT_OUTPUT_MAX_TOKENS_DEEP: z.coerce.number().int().positive().default(420),
   QFPAD_DOCS_BASE_URL: z.string().url(),
   QFPAD_DOCS_SEED_URLS: z.string().default(""),
-  QFPAD_LOCAL_GUIDE_PATHS: z.string().default(""),
   ETH_MAINNET_RPC_URL: z.string().url(),
   QF_ETH_RPC_URL: z.string().url(),
   QF_WS_RPC_URL: z.string().url(),
@@ -34,7 +34,7 @@ export const config = {
   nodeEnv: env.NODE_ENV,
   databaseUrl: env.DATABASE_URL,
   databaseSsl: env.DATABASE_SSL,
-  port: env.CHAT_API_PORT,
+  port: env.PORT ?? env.CHAT_API_PORT,
   corsOrigin: env.CHAT_CORS_ORIGIN,
   rateLimitWindowSeconds: env.CHAT_RATE_LIMIT_WINDOW_SECONDS,
   rateLimitMaxRequests: env.CHAT_RATE_LIMIT_MAX_REQUESTS,
@@ -44,10 +44,6 @@ export const config = {
   chatOutputMaxTokensDeep: env.CHAT_OUTPUT_MAX_TOKENS_DEEP,
   docsBaseUrl: env.QFPAD_DOCS_BASE_URL,
   docsSeedUrls: env.QFPAD_DOCS_SEED_URLS
-    .split(",")
-    .map((value) => value.trim())
-    .filter(Boolean),
-  localGuidePaths: env.QFPAD_LOCAL_GUIDE_PATHS
     .split(",")
     .map((value) => value.trim())
     .filter(Boolean),

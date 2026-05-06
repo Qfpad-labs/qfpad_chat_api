@@ -16,6 +16,13 @@ npm install
 npm run db:migrate
 ```
 
+This service now ships with bundled support guides for:
+
+- the QPAD buyer quick guide
+- QPAD Fiesta details
+
+So it no longer depends on machine-local guide files from another repo.
+
 ## Run
 
 ```bash
@@ -36,6 +43,40 @@ npm run docs:sync
 ```
 
 The initial docs sync is intentionally small and uses `QFPAD_DOCS_SEED_URLS`.
+It also syncs the bundled support guides from `docs/support/`.
+
+## Render deployment
+
+Deploy this as a separate Render Web Service.
+
+Recommended settings:
+
+- Runtime: `Node`
+- Branch: `main`
+- Build command:
+
+```bash
+npm install && npm run build && npm run db:migrate
+```
+
+- Start command:
+
+```bash
+npm run start
+```
+
+- Health check path:
+
+```text
+/api/chat/health
+```
+
+Important notes:
+
+- The server supports Render's `PORT` env automatically.
+- Set `CHAT_CORS_ORIGIN=https://qfpad.xyz`.
+- Set `QPAD_STATUS_API_BASE_URL` to your allocator worker URL.
+- Set your DeepSeek key and RPC URLs in Render env vars.
 
 ## Endpoints
 

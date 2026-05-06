@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
-import { readFile } from "node:fs/promises";
+import { access, readFile } from "node:fs/promises";
 import * as cheerio from "cheerio";
-import { basename } from "node:path";
+import { basename, resolve } from "node:path";
 import { config } from "../config.js";
 import { closeDb, pool, replaceDocChunks, runMigrations, upsertDocSource } from "../db.js";
 import { logger } from "../logger.js";
@@ -10,6 +10,10 @@ const MAX_PAGES_PER_RUN = 30;
 const CHUNK_SIZE = 1200;
 const CHUNK_OVERLAP = 150;
 const QPAD_SALE_PAGE_URL = "https://qfpad.xyz/projects/0xed11eF1cA37f12635ffF6ad6163486F884A521Ca";
+const BUNDLED_GUIDES = [
+  resolve(process.cwd(), "docs/support/qpad_buyer_quick_guide.md"),
+  resolve(process.cwd(), "docs/support/qpad_fiesta_details.md"),
+];
 
 function chunkText(text: string, title: string) {
   const normalized = text.replace(/\s+/g, " ").trim();
@@ -161,6 +165,21 @@ async function syncLocalGuide(filePath: string) {
   logger.info("Synced local guide", { filePath, sourceUrl: metadata.sourceUrl });
 }
 
+async function getBundledGuidePaths() {
+  const resolved: string[] = [];
+
+  for (const filePath of BUNDLED_GUIDES) {
+    try {
+      await access(filePath);
+      resolved.push(filePath);
+    } catch {
+      logger.warn("Bundled guide not found, skipping", { filePath });
+    }
+  }
+
+  return resolved;
+}
+
 async function main() {
   await runMigrations();
 
@@ -209,7 +228,7 @@ async function main() {
     await syncUrl(url);
   }
 
-  for (const filePath of config.localGuidePaths) {
+  for (const filePath of await getBundledGuidePaths()) {
     await syncLocalGuide(filePath);
   }
 
