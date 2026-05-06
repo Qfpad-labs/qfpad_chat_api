@@ -122,14 +122,14 @@ async function syncUrl(url: string) {
 function resolveLocalGuideMetadata(filePath: string) {
   const fileName = basename(filePath).toLowerCase();
 
-  if (fileName === "qpad_buyer_quick_guide.txt") {
+  if (fileName === "qpad_buyer_quick_guide.txt" || fileName === "qpad_buyer_quick_guide.md") {
     return {
       sourceUrl: `${QPAD_SALE_PAGE_URL}#quick-buying-guide`,
       title: "QPAD Presale Quick Buying Guide",
     };
   }
 
-  if (fileName === "qpad_fiesta_details.txt") {
+  if (fileName === "qpad_fiesta_details.txt" || fileName === "qpad_fiesta_details.md") {
     return {
       sourceUrl: `${QPAD_SALE_PAGE_URL}#qpad-fiesta`,
       title: "QPAD Fiesta Incentives",
@@ -142,6 +142,20 @@ function resolveLocalGuideMetadata(filePath: string) {
   };
 }
 
+async function cleanupLegacyLocalGuideSource(filePath: string, canonicalSourceUrl: string) {
+  const fileName = basename(filePath).toLowerCase();
+  const legacySourceUrl = `local-guide://${fileName}`;
+
+  if (legacySourceUrl === canonicalSourceUrl) {
+    return;
+  }
+
+  await pool.query(
+    `delete from chatbot.doc_sources where source_url = $1`,
+    [legacySourceUrl],
+  );
+}
+
 async function syncLocalGuide(filePath: string) {
   const text = (await readFile(filePath, "utf8")).trim();
   if (!text) {
@@ -150,6 +164,8 @@ async function syncLocalGuide(filePath: string) {
   }
 
   const metadata = resolveLocalGuideMetadata(filePath);
+  await cleanupLegacyLocalGuideSource(filePath, metadata.sourceUrl);
+
   const contentHash = createHash("sha256").update(text).digest("hex");
   const sourceId = await upsertDocSource({
     sourceUrl: metadata.sourceUrl,
