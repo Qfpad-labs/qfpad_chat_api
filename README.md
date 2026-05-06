@@ -56,7 +56,7 @@ Recommended settings:
 - Build command:
 
 ```bash
-npm install && npm run build && npm run db:migrate
+npm install --include=dev && npm run build && npm run db:migrate:prod
 ```
 
 - Start command:
